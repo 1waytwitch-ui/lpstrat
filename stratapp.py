@@ -5,7 +5,7 @@ import requests
 import pandas as pd
 
 # ---------- CONFIGURATION ----------
-BASE_RPC_URL = 'https://mainnet.base.org'  # RPC public, pas besoin de clé API
+BASE_RPC_URL = 'https://mainnet.base.org'  # Pas besoin de clé API
 ERC20_ABI = '''
 [
   {"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"type":"function"},
@@ -13,8 +13,15 @@ ERC20_ABI = '''
   {"constant":true,"inputs":[{"name":"owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"type":"function"}
 ]
 '''
+
 # Connexion Web3
 web3 = Web3(Web3.HTTPProvider(BASE_RPC_URL))
+
+
+# ---------- OUTILS ----------
+def to_checksum(addr):
+    """Corrige l’adresse au format EIP-55 si besoin."""
+    return Web3.to_checksum_address(addr.strip())
 
 
 # ---------- FONCTIONS ----------
@@ -53,12 +60,12 @@ st.title("🔍 Analyse de Stratégie LP (Uniswap/Base)")
 
 st.sidebar.header("⚙️ Paramètres")
 
-# -- Exemple de pool WETH/USDbC sur Base --
+# Exemple : Uniswap V3 WETH / USDbC sur Base
 example_pool = "0xF46f64f157c2cD6136D4a052Ea938bD6fEb3e26C"
-example_token_a = "0x4200000000000000000000000000000000000006"  # WETH natif Base
-example_token_b = "0xd9aa594f868A0a2E2EFC5663eC3083a1B5DcB6c8"  # USDbC
+example_token_a = "0x4200000000000000000000000000000000000006"  # WETH
+example_token_b = "0xd9aa594f868a0a2e2efc5663ec3083a1b5dcb6c8"  # USDbC
 
-# Bouton pour pré-remplir avec un exemple
+# Bouton d'exemple
 if st.sidebar.button("Utiliser un exemple"):
     st.session_state["pool_address"] = example_pool
     st.session_state["token_a"] = example_token_a
@@ -68,15 +75,20 @@ else:
     st.session_state.setdefault("token_a", "")
     st.session_state.setdefault("token_b", "")
 
-# Champs de saisie avec valeurs persistantes
+# Champs de saisie
 pool_address = st.sidebar.text_input("Adresse du Pool", st.session_state["pool_address"])
 token_a = st.sidebar.text_input("Adresse du Token A", st.session_state["token_a"])
 token_b = st.sidebar.text_input("Adresse du Token B", st.session_state["token_b"])
 
 
-# Bouton pour lancer l’analyse
+# ---------- ANALYSE ----------
 if st.sidebar.button("Analyser"):
     try:
+        # ✅ Corriger les adresses au format checksum
+        pool_address = to_checksum(pool_address)
+        token_a = to_checksum(token_a)
+        token_b = to_checksum(token_b)
+
         # Infos tokens
         symbol_a, decimals_a = get_token_info(token_a)
         symbol_b, decimals_b = get_token_info(token_b)
@@ -94,10 +106,9 @@ if st.sidebar.button("Analyser"):
         # TVL
         tvl = (balance_a * price_a) + (balance_b * price_b)
 
-        # Impermanent loss simulée pour un prix doublé
+        # IL simulée (ex : prix doublé)
         il = calculate_impermanent_loss(2.0)
 
-        # Affichage
         st.success("✅ Données récupérées avec succès")
 
         data = {
