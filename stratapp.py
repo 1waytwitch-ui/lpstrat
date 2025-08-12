@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 
 # URL du Subgraph Uniswap V3 sur Base
-UNISWAP_V3_SUBGRAPH_BASE = "https://api.thegraph.com/subgraphs/name/ianlapham/base-v3"
+UNISWAP_V3_SUBGRAPH_BASE = "https://gateway.thegraph.com/api/subgraphs/id/HMuAwufqZ1YCRmzL2SfHTVkzZovC9VL2UAKhjvRqKiR1"
 
 def get_position_data(token_id):
     query = """
