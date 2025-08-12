@@ -5,7 +5,7 @@ import requests
 import pandas as pd
 
 # ---------- CONFIGURATION ----------
-BASE_RPC_URL = 'https://mainnet.base.org'  # ✅ Pas besoin d'Infura
+BASE_RPC_URL = 'https://mainnet.base.org'  # RPC public, pas besoin de clé API
 ERC20_ABI = '''
 [
   {"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"type":"function"},
@@ -53,29 +53,51 @@ st.title("🔍 Analyse de Stratégie LP (Uniswap/Base)")
 
 st.sidebar.header("⚙️ Paramètres")
 
-pool_address = st.sidebar.text_input("Adresse du Pool", "0x...")
-token_a = st.sidebar.text_input("Adresse du Token A", "0x...")
-token_b = st.sidebar.text_input("Adresse du Token B", "0x...")
+# -- Exemple de pool WETH/USDbC sur Base --
+example_pool = "0xF46f64f157c2cD6136D4a052Ea938bD6fEb3e26C"
+example_token_a = "0x4200000000000000000000000000000000000006"  # WETH natif Base
+example_token_b = "0xd9aa594f868A0a2E2EFC5663eC3083a1B5DcB6c8"  # USDbC
 
-# Bouton d’analyse
+# Bouton pour pré-remplir avec un exemple
+if st.sidebar.button("Utiliser un exemple"):
+    st.session_state["pool_address"] = example_pool
+    st.session_state["token_a"] = example_token_a
+    st.session_state["token_b"] = example_token_b
+else:
+    st.session_state.setdefault("pool_address", "")
+    st.session_state.setdefault("token_a", "")
+    st.session_state.setdefault("token_b", "")
+
+# Champs de saisie avec valeurs persistantes
+pool_address = st.sidebar.text_input("Adresse du Pool", st.session_state["pool_address"])
+token_a = st.sidebar.text_input("Adresse du Token A", st.session_state["token_a"])
+token_b = st.sidebar.text_input("Adresse du Token B", st.session_state["token_b"])
+
+
+# Bouton pour lancer l’analyse
 if st.sidebar.button("Analyser"):
     try:
+        # Infos tokens
         symbol_a, decimals_a = get_token_info(token_a)
         symbol_b, decimals_b = get_token_info(token_b)
 
+        # Balances dans le pool
         raw_a, raw_b = get_pool_balances(pool_address, token_a, token_b)
-        balance_a = Decimal(raw_a) / (10 ** decimals_a)
-        balance_b = Decimal(raw_b) / (10 ** decimals_b)
+        balance_a = Decimal(raw_a) / Decimal(10) ** decimals_a
+        balance_b = Decimal(raw_b) / Decimal(10) ** decimals_b
 
+        # Prix via CoinGecko
         prices = get_token_prices(['ethereum', 'usd-coin'])
         price_a = prices['ethereum']
         price_b = prices['usd-coin']
 
+        # TVL
         tvl = (balance_a * price_a) + (balance_b * price_b)
 
-        # Exemple: ETH est passé de 2000 à 3000
-        il = calculate_impermanent_loss(1.5)
+        # Impermanent loss simulée pour un prix doublé
+        il = calculate_impermanent_loss(2.0)
 
+        # Affichage
         st.success("✅ Données récupérées avec succès")
 
         data = {
