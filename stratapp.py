@@ -5,7 +5,7 @@ import requests
 import pandas as pd
 
 # ---------- CONFIGURATION ----------
-INFURA_URL = 'https://base-mainnet.infura.io/v3/YOUR_INFURA_KEY'  # Remplace par ton endpoint
+BASE_RPC_URL = 'https://mainnet.base.org'  # ✅ Pas besoin d'Infura
 ERC20_ABI = '''
 [
   {"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"type":"function"},
@@ -14,7 +14,7 @@ ERC20_ABI = '''
 ]
 '''
 # Connexion Web3
-web3 = Web3(Web3.HTTPProvider(INFURA_URL))
+web3 = Web3(Web3.HTTPProvider(BASE_RPC_URL))
 
 
 # ---------- FONCTIONS ----------
